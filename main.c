@@ -69,7 +69,7 @@ int is_authorized(char** headers);
 
 int is_target_fd(int fd);
 int is_client_fd(int fd);
-int get_optimal_target_fd(int conn_idx);
+int get_optimal_target_fd(int epfd, int conn_idx);
 
 int get_lowest_conn_buf();
 int get_conn_buf_from_fd(int fd);
@@ -165,7 +165,7 @@ int main() {
                 printf("client fd: %d is authorized\n", fd);
 
                 // choose target to forward data to based on some load balancing logic
-                int target_fd = get_optimal_target_fd(conn_idx);
+                int target_fd = get_optimal_target_fd(epfd, conn_idx);
 
                 // forward data and wait for response
                 // TODO: add target_fd response also to epoll for better scaling and cleaner code
@@ -380,13 +380,24 @@ int is_client_fd(int fd) {
 }
 
 // load balancing logic goes here
-int get_optimal_target_fd(int conn_idx) {
+int get_optimal_target_fd(int epfd, int conn_idx) {
     int idx = next_target;
     int port = target_ports[idx];
     int sockfd = connect_to_targets(port);
     if (sockfd >= 0) {
         target_fds[idx]   = sockfd;
         target_client[idx] = conn_idx;
+// added target fd to the epoll        
+        struct epoll_event ev;
+        ev.events = EPOLLIN;
+        ev.data.fd = sockfd;
+        if (epoll_ctl(epfd, EPOLL_CTL_ADD, sockfd, &ev) == -1){
+            perror("epoll_ctl: target_fd");
+            close(sockfd);
+            return -1;
+        }else{
+ //           printf("Target fd %d added to epoll\n", sockfd);
+        }
     }
     next_target = (next_target + 1) % TARGET_COUNT;
     return sockfd;
