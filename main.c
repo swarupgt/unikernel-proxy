@@ -57,23 +57,23 @@ const char *http_unauthorized_response =
 
 // fn decs
 
-int make_socket_non_blocking(int sfd);
-int create_server_socket(int port);
-int connect_to_targets();
-void init_conn_buf();
+int make_socket_non_blocking(int sfd); // done - conn_handler.c
+int create_server_socket(int port); // done - conn_handler.c
+int connect_to_targets(); // done - conn_handler.c
+void init_conn_buf(); // done - conn_handler.c
 
-int forward_data(int epfd, int conn_idx, int target_fd, int len);
-char** get_http_headers(char* request);
-void free_headers(char** headers);
-int is_authorized(char** headers);
+int forward_data(int epfd, int conn_idx, int target_fd, int len); // done - conn_handler.c
+char** get_http_headers(char* request); // done - helper.c
+void free_headers(char** headers); // done - helper.c
+int is_authorized(char** headers); // done - auth_handler.c
 
-int is_target_fd(int fd);
-int is_client_fd(int fd);
-int get_optimal_target_fd(int epfd, int conn_idx);
+int is_target_fd(int fd); // done - conn_handler.c
+int is_client_fd(int fd); // done - conn_handler.c
+int get_optimal_target_fd(int conn_idx); // done - load_balancer.c
 
-int get_lowest_conn_buf();
-int get_conn_buf_from_fd(int fd);
-void reset_conn_buff(int client_idx);
+int get_lowest_conn_buf(); // done - conn_handler.c
+int get_conn_buf_from_fd(int fd); // done - conn_handler.c
+void reset_conn_buff(int client_idx); // done - conn_handler.c
 
 
 // MAIN
