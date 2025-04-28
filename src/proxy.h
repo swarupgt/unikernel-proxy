@@ -1,6 +1,8 @@
 #ifndef UNIKERNEL_PROXY_H
 #define UNIKERNEL_PROXY_H
 
+#include "utils/logger.h"
+
 #define LISTEN_PORT 8080
 #define FORWARD_PORT 9090
 #define MAX_EVENTS 1000
@@ -12,12 +14,12 @@
 #define TARGET_COUNT 10
 
 // local host
-// #define FORWARD_HOST "127.0.0.1"
+#define FORWARD_HOST "127.0.0.1"
 
 // qemu host
-#define FORWARD_HOST "10.0.2.2"
-#define AUTH_HEADER "X-Auth-Token"
-#define VALID_TOKEN "token"
+// #define FORWARD_HOST "10.0.2.2"
+
+extern LogContext log_ctx;
 
 typedef struct client_buffer {
     int fd;

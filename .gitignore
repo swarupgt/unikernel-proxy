@@ -56,3 +56,4 @@ dkms.conf
 
 # scratch files
 .local
+log_out.txt

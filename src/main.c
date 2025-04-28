@@ -3,6 +3,7 @@
 #include "auth_handler.h"
 #include "load_balancer.h"
 #include "conn_handler.h"
+#include "utils/logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +16,8 @@
 #include <arpa/inet.h>
 #include <sys/epoll.h>
 #include <fcntl.h>
+
+LogContext log_ctx;
 
 client_t conn_bufs[MAX_CLIENTS];
 int target_fds[MAX_TARGETS];
@@ -36,12 +39,18 @@ const char *http_unauthorized_response =
     "Unauthorized\n";
 
 int main() {
+    get_std_logger(&log_ctx);
+
+    if (!getenv("AUTH_TOKEN")){
+        log_error(&log_ctx, "fatal: env variable AUTH_TOKEN not set. exiting... \n");
+        exit(1);
+    }
 
     init_conn_buf();
 
     int epfd = epoll_create1(0);
     if (epfd == -1) {
-        printf("cannot create epoll\n");
+        log_error(&log_ctx, "cannot create epoll\n");
         exit(EXIT_FAILURE);
     }
 
@@ -52,11 +61,12 @@ int main() {
     ev.data.fd = listen_fd;
     epoll_ctl(epfd, EPOLL_CTL_ADD, listen_fd, &ev);
 
-    printf("listening on port %d...\n", LISTEN_PORT);
+    log_info(&log_ctx, "listening on port: %d\n", LISTEN_PORT);
+
 
     while (1) {
         int n = epoll_wait(epfd, events, MAX_EVENTS, -1);
-        // printf("num epoll-events: %d\n", n);
+        
         for (int i = 0; i < n; ++i) {
             int fd = events[i].data.fd;
 
@@ -72,19 +82,20 @@ int main() {
                 ev.events = EPOLLIN;
                 ev.data.fd = client_fd;
                 epoll_ctl(epfd, EPOLL_CTL_ADD, client_fd, &ev);
-                printf("new connection accepted\n");
+
+                log_info(&log_ctx, "new connection accepted\n");
 
                 int conn_idx = get_lowest_conn_buf();
-                printf("assigned conn index: %d\n", conn_idx);
+                log_info(&log_ctx, "assigned conn index: %d\n", conn_idx);
                 if (conn_idx < 0) {
                     // too many active clients, close fd?
-                    printf("too many active clients, closing fd for now\n");
+                    log_error(&log_ctx, "too many active clients. closing the fd for now\n");
                     epoll_ctl(epfd, EPOLL_CTL_DEL, client_fd, NULL);
                     close(fd);
                     continue;
                 }
 
-                printf("new client fd: %d\n", client_fd);
+                log_info(&log_ctx, "new client fd: %d\n", client_fd);
                 conn_bufs[conn_idx].fd = client_fd;
                 continue;
 
@@ -93,7 +104,7 @@ int main() {
                 int conn_idx = get_conn_buf_from_fd(fd);
                 int len = read(fd, conn_bufs[conn_idx].read_buffer, sizeof(conn_bufs[conn_idx].read_buffer));
                 if (len < 0) {
-                    printf("read from client failed\n");
+                    log_error(&log_ctx, "read from client failed\n");
                     epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
                     close(fd);
                     continue;
@@ -109,7 +120,7 @@ int main() {
                     // set that in conn_bufs of that client
                     // and make client fd epollout
 
-                    printf("client fd: %d is not authorized\n", fd);
+                    log_warn(&log_ctx, "client fd: %d is not authorized. sending default unauthorized response.\n", fd);
                     strcpy(conn_bufs[conn_idx].write_buffer, http_unauthorized_response);
                     events[i].events = EPOLLOUT;
                     ev.data.fd = fd;
@@ -120,7 +131,7 @@ int main() {
 
                 free_headers(headers);
 
-                printf("client fd: %d is authorized\n", fd);
+                log_info(&log_ctx, "client fd: %d is authorized\n", fd);
 
                 // choose target to forward data to based on some load balancing logic
                 int target_fd = get_optimal_target_fd(conn_idx);
@@ -128,32 +139,18 @@ int main() {
                 // forward data and wait for response
                 // TODO: add target_fd response also to epoll for better scaling and cleaner code
                 if (forward_data(conn_idx, target_fd, len) < 0) {
-                    printf("forwarding data to target fd: %d failed, service down\n", target_fd);
+                    log_info(&log_ctx, "forwarding data to target fd: %d failed, service down\n", target_fd);
                     epoll_ctl(epfd, EPOLL_CTL_DEL, target_fd, NULL);
                     close(target_fd);
                     exit(EXIT_FAILURE);
                 }
 
-                // get response, modify client fd to epollout to write 
-                /*len = read(target_fd, conn_bufs[conn_idx].write_buffer, sizeof(conn_bufs[conn_idx].write_buffer));
-                if (len < 0) {
-                    printf("could not read from target fd: %d\n", target_fd);
-                    epoll_ctl(epfd, EPOLL_CTL_DEL, target_fd, NULL);
-                    close(target_fd);
-                    exit(EXIT_FAILURE);
-                }
-
-                conn_bufs[conn_idx].write_len = len;
-                events[i].events = EPOLLOUT;
-                epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &events[i]);
-                close(target_fd);
-                continue;*/
                 ev.events = EPOLLIN;
                 ev.data.fd = target_fd;
                 epoll_ctl(epfd, EPOLL_CTL_ADD, target_fd, &ev);
             
             // target server responds
-            }else if(is_target_fd(fd) && (events[i].events & EPOLLIN) ){
+            } else if(is_target_fd(fd) && (events[i].events & EPOLLIN) ){
                 int t_idx = -1;
                 for(int j=0; j<TARGET_COUNT; j++){
                     if(target_fds[j]==fd){
@@ -167,7 +164,7 @@ int main() {
                 int c_idx = target_client[t_idx];
                 int len = read(fd, conn_bufs[c_idx].write_buffer, BUFFER_SIZE);
                 if(len<0){
-                    printf("could not read from target fd: %d\n", fd);
+                    log_error(&log_ctx, "could not read from target fd: %d\n", fd);
                     epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
                     close(fd);
                     exit(EXIT_FAILURE);
@@ -187,9 +184,9 @@ int main() {
 
                 int idx = get_conn_buf_from_fd(fd);
                 if (write(fd, conn_bufs[idx].write_buffer, conn_bufs[idx].write_len) < 0) {
-                    printf("could not write to client fd: %d\n", fd);
+                    log_error(&log_ctx, "could not write to client fd: %d\n", fd);
                 } else {
-                    printf("success responding to client fd:%d\n", fd);
+                    log_info(&log_ctx, "success responding to client fd:%d\n", fd);
                 }
 
                 epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
@@ -197,9 +194,6 @@ int main() {
                 // done serving client, reset conn buff for any new clients
                 reset_conn_buff(idx);
             } 
-
-            // TODO:
-            // handle target fds as part of epoll (if we make targets non-blocking)
         }
     }
 
