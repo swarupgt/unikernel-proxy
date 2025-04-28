@@ -32,7 +32,7 @@ We initially planned to write our proxy in Go, since apparently unikraft support
 
 ## Running the project
 
-The demo video - [unikraft_proxy_demo.mkv](./advos_unikraft_demo.mkv)
+The demo video - [unikraft_proxy_demo.mkv](./advos_unikraft_proxy_demo.mkv)
 
 This project needs the `kraft` tool installed beforehand. You can install it from [here](https://github.com/unikraft/kraftkit?tab=readme-ov-file#installation)
 
