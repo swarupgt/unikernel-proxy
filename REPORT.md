@@ -21,17 +21,61 @@ The initial idea was to develop a build of unikraft that contains support for ru
 
 After a series of discussions with Jacob and others in the Discord channel, we concluded that using Go might be not fully supported for general use in Unikraft. 
 
-### **The provided examples are outdated**
+### The provided examples are outdated
 We started with the [http-go](https://github.com/unikraft/catalog/tree/main/examples/http-go1.21) example from the unikraft examples catalog. This example uses Kraftkit for building a minimal http server in Go using native library support. Though this seemed simple to work with on the first look, once we tried it out, it failed with an error saying 'pthread' is not supported. This was a major bummer for us as Goroutines use pthreads. 
 
-### **Compilation fails when we try to build**
+We tried multiple versions of Kraftkit (updating and downgrading) -  `v0.18.0 (Helene)`, `v0.17.0 (Calypso)`, and `v0.16.3 (Telesto)`, but it did not work. 
 
 
-### **Without Kraftkit: app-helloworld-go, does not work**
-https://github.com/unikraft/app-helloworld-go 
-'0.6'?
-libs in wrong order in kraft.yaml
-compilation fails
+### Without Kraftkit: app-helloworld-go, does not work
 
 
-### **Some examples do work, but they do not have much documentation on how to repurpose them**
+The [app-helloworld-go](https://github.com/unikraft/app-helloworld-go) example from unikraft has a minimal version of a `Hello World` Application which comes with built configurations for kraftkit. The kraftkit uses that to build the minimal version of unikraft that can support `Go`. This has numerous problems: 
+
+1. The libraries in `kraft.yaml` are listed as follows: 
+
+```yaml
+libraries:
+  gcc: '0.6'
+  libgo: '0.6'
+  pthread-embedded: '0.6'
+  lwip: '0.6'
+  compiler-rt: '0.6'
+  libcxx: '0.6'
+  libcxxabi: '0.6'
+  libunwind: '0.6'
+  libucontext: '0.6'
+  newlib: '0.6'
+```
+
+This is completely wrong when compared with the documentation of [libgo](https://github.com/unikraft/lib-libgo/tree/stable). The libgo documentation mentions an order of including these libraries in the kraft.yaml file, which was not the case. The default branch in libgo is `staging`, which is currently on `0.6`. They have a stable version available to work with, and can be used by changing the library versions in the kraft.yaml file. 
+
+2. The updated yaml file, according to libgo documentation looks like this:
+
+```yaml
+libraries:
+  gcc: 'stable'
+  compiler-rt: 'stable'
+  libunwind: 'stable'
+  musl: 'stable'
+  lwip: 'stable'
+  libgo: 'stable'
+  pthread-embedded: 'stable'
+  libcxx: 'stable'
+  libcxxabi: 'stable'
+  libunwind: 'stable'
+  libucontext: 'stable'
+  newlib: 'stable'
+```
+ 
+This too fails with a compilation error. 😭
+
+
+### Some examples do work, but they do not have much documentation on how to repurpose them
+
+What's confusing was that there are some applications in the unikraft catalog that are written in Go and work. But there is no way to repurpose them for our use. For example, [hugo](https://github.com/unikraft/catalog/tree/main/examples/hugo) is a tool written in Go for serving web pages and uses the `runtime: hugo:latest` for running the server. We tried to repurpose this tool in our work, to find a hack around using Go, but the default image of hugo did not come with a go binary, it just runs the hugo binary directly. We did try to change the filesystem by using the `go` docker image instead of `scratch`, but that defeats the purpose of building a specialized unikernel as it injects additional dependencies into the system that comes with the image. 
+
+
+###  Conclusion 
+
+In the end we decided that their documentation is outdated and needs rigorous testing before it can be used by others. So we resorted to trying out C in Unkiraft and built a minimal version of a server that can do `epoll`. This worked well, so we added additional functionalities to the rest of the work and tested it with multiple clients and servers. 
