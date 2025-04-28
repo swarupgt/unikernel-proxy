@@ -1,19 +1,8 @@
-# Unikernel Proxy
-
-In this project, we present an reverse proxy written and built for [unikraft](https://unikraft.org/). A reverse proxy is a service used to protect the identity of the servers from externel clients. We aim to provide authentication and load-balancing capabilities in this reverse proxy. The flow of this system will look like this: 
-
-![rev-proxy](./docs/rev_proxy.png)
-
-The clients on the left will only be able to communicate to the subsystem on the right via the reverse proxy (as only that port and host is exposed to the clients). 
-
-Any request from the client must contain the authentication header 'X-Auth-Token'. 
-Once the request is authenticated, the load balancing logic selects one of the servers available to the proxy and creates a connection with them. It then forwards the request from client to the server. After the server responds, the response is then read and sent to the client via client's fd. This way, the client never maintains a direct connection with the server. 
-
+# Report
 
 ## How does the project build work?
 
 Unikraft provides a tool called [Kraftkit](https://github.com/unikraft/kraftkit) for building the unikernel with a minimal filesystem using Docker. It uses Dockerfile with multi-stage builds to build the source application in the earlier stages and copies the build files from them into the last stage where the base image is `scratch`, a minimal image to run things. Once the build is done, the kraft tool copies the filesystem from the docker build into the .unikernel directory. These details can be found in the Dockerfile and the Kraftfile. 
-
 
 ## Our explorations for Go support in Unikraft 
 
