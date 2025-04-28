@@ -9,6 +9,8 @@
 ## Description
 A simple reverse proxy server written in C built on Unikraft, a unikernel. A client can fire a GET request to the proxy server IP. The server authenticates the incoming request from its headers, and uses a load balancing algorithm (round robin in this case) to route this request to the appropriate target server node. The target server responds, and the the proxy forwards the response back to the client, all without the client knowing anything about the internal server nodes. 
 
+The target servers in our case are just simple Python HTTP servers. These are separate from our actual project, and run externally.
+
 For more detailed information on the implementation, please refer to the following files:
 - [Core server loop](./src/main.c)
 - [Load balancing](./src/load_balancer.c)
@@ -21,6 +23,8 @@ We initially planned to write our proxy in Go, since apparently unikraft support
 ## Running the project
 
 This project needs the `kraft` tool installed beforehand. You can install it from [here](https://github.com/unikraft/kraftkit?tab=readme-ov-file#installation)
+
+We also need Docker installed.
 
 To run our project, 
 1. Run the `run_services.sh` script to start simple `Hello World` servers on ports `9090` through `9099`.
