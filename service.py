@@ -1,3 +1,6 @@
+# External target servers for the proxy.
+# Simple Hello World HTTP Servers running on ports 9090 through 9099
+
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -11,7 +14,7 @@ class HelloHandler(BaseHTTPRequestHandler):
             "Content-Type: text/plain\r\n"
             "Content-Length: 13\r\n"
             "\r\n"
-            "Hello, World!"
+            "Hello, World!\n"
         )
 
         self.wfile.write(response.encode('utf-8'))
