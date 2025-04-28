@@ -51,10 +51,43 @@ void test_init_conn_buf() {
 }
 
 
+void test_is_client_fd() {
+    const char* ut_name = "test_is_client_fd";
+    reset_values();
+    
+    conn_bufs[3].fd = 12;
+    assert(is_client_fd(12) == 1);
+
+    conn_bufs[4].fd = 14;
+    assert(is_client_fd(14) == 1);
+
+    assert(is_client_fd(17) == 0);
+
+    printf("test:%s:\033[1;33m%s\033[0m:\033[32mPASSED\033[0m\n", test_name, ut_name);
+}
+
+
+void test_is_target_fd() {
+    const char* ut_name = "test_is_target_fd";
+    reset_values();
+    
+    target_fds[3] = 12;
+    assert(is_target_fd(12) == 1);
+
+    target_fds[4] = 14;
+    assert(is_target_fd(14) == 1);
+
+    assert(is_target_fd(17) == 0);
+
+    printf("test:%s:\033[1;33m%s\033[0m:\033[32mPASSED\033[0m\n", test_name, ut_name);
+}
+
+
 
 int main() {
     get_file_logger(&log_ctx, "log_out.txt");
     
     test_init_conn_buf();
-
+    test_is_client_fd();
+    test_is_target_fd();
 }
