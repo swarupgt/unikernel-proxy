@@ -172,7 +172,7 @@ int main() {
                 else{
                     conn_bufs[c_idx].write_len = len;
                     //schedule client_fd for write-back
-                    events[i].events = EPOLLIN | EPOLLOUT;
+                    events[i].events = EPOLLOUT;
                     events[i].data.fd = conn_bufs[c_idx].fd;
                     epoll_ctl(epfd, EPOLL_CTL_MOD, conn_bufs[c_idx].fd, &events[i]);
                 }

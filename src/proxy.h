@@ -14,10 +14,10 @@
 #define TARGET_COUNT 10
 
 // local host
-#define FORWARD_HOST "127.0.0.1"
+// #define FORWARD_HOST "127.0.0.1"
 
 // qemu host
-// #define FORWARD_HOST "10.0.2.2"
+#define FORWARD_HOST "10.0.2.2"
 
 extern LogContext log_ctx;
 
