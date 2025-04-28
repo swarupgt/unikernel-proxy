@@ -26,7 +26,7 @@ void init_conn_buf() {
     log_info(&log_ctx, "initialized connection buffers\n");
 }
 
-
+__attribute__((weak))
 int connect_to_targets(int port) {
     int sockfd;
     struct sockaddr_in addr;
