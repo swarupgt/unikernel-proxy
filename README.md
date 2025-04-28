@@ -28,7 +28,7 @@ For more detailed information on the implementation, please refer to the followi
 - [Tests](./tests/)
 
 ## Exploring Go for our Unikraft project
-We initially planned to write our proxy in Go, since apparently unikraft supports Go (both from kraftkit and building from source). Our (unsuccessful) attempts working with both methods are documented more in detail [here](./REPORT.md). Due to timing constraints, we decided to implement our project in C instead. 
+We initially planned to write our proxy in Go, since apparently unikraft supports Go (both from kraftkit and building from source). Our (unsuccessful) attempts working with both methods are documented more in detail [HERE](./REPORT.md). Due to timing constraints, we decided to implement our project in C instead. 
 
 ## Running the project
 
@@ -66,4 +66,22 @@ test:02_test_conn_handler:test_is_client_fd:PASSED
 test:02_test_conn_handler:test_is_target_fd:PASSED
 ---------FINISHED TESTS---------
 ```
+
+
+## Attributions
+
+A lot of inspiration was drawn from our previous project for building the nameserver. 
+
+We maintain the same attribution in that regards and can be found here: [advos-unix-service repo](https://github.com/rutu-sh/advos-unix-service?tab=readme-ov-file#attributions)
+
+For this project we found ChatGPT useful in certain places: 
+
+1. Modified the logs from advos-unix-service to be variadic and print timestamps. We prompted ChatGPT with the [previous code](https://github.com/rutu-sh/advos-unix-service/blob/main/src/common/logger.c) and asked it to make it variadic and timestamped. 
+
+2. The service.py, which is unrelated to the actual project, was also inspired from ChatGPT. We promped ChatGPT asking to write a python server that listens on multiple ports. 
+
+
+A lot of discussions, on Discord and in-class, also helped guide our work in the right direction. Jacob helped a lot with discussing findings on how to use unikraft. 
+
+Lastly, thanks Gabe for an amazing class this spring, we enjoyed writing this code. 
 
