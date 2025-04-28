@@ -45,3 +45,25 @@ To run our project,
     ```
 
 ## Tests
+
+To run the unit tests for this project run the following command: 
+
+```shell
+make test
+```
+
+The expected output should be:
+
+```shell
+---------RUNNING TESTS---------
+test:03_test_helper:test_get_http_headers:PASSED
+test:03_test_helper:test_free_headers:PASSED
+test:01_test_auth_handler:test_unauthorized:PASSED
+test:01_test_auth_handler:test_authorized:PASSED
+test:04_test_load_balancer:test_round_robin_allocation:PASSED
+test:02_test_conn_handler:test_init_conn_buf:PASSED
+test:02_test_conn_handler:test_is_client_fd:PASSED
+test:02_test_conn_handler:test_is_target_fd:PASSED
+---------FINISHED TESTS---------
+```
+
